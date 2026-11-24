@@ -1,0 +1,6 @@
+# Utilisé seulement si GitHub Pages construit le site avec Jekyll
+# (cas où le fichier caché .nojekyll n'a pas été envoyé). Sans effet sinon.
+exclude:
+  - source
+  - README.md
+  - .gitignore

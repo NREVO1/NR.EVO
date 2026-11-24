@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Braise — Grill au feu de bois</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap">
+<style>
+/* Layout : une page de restaurant sombre, éclairée par le feu — braises en canvas, carte typographique, réservation en un écran */
+:root{
+  --char:#110d0b; --soot:#1b1512; --soot-2:#251d18; --line:#3a2e27;
+  --ash:#a39388; --bone:#f3e9dc; --ember:#ff5a1f; --flame:#ffb238; --leaf:#9fbf7a;
+  --display:"Big Shoulders Display","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--char);color:var(--bone);font:400 18px/1.55 var(--serif);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%}
+a{color:inherit}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+.temp sup{font-size:.28em!important}
+:focus-visible{outline:2px solid var(--flame);outline-offset:3px}
+.wrap{width:min(1180px,100%);margin-inline:auto;padding-inline:clamp(16px,4vw,40px)}
+.eyebrow{font:700 13px/1 var(--display);letter-spacing:.22em;text-transform:uppercase;color:var(--flame)}
+h1,h2,h3{font-family:var(--display);font-weight:900;text-transform:uppercase;line-height:.9;margin:0;text-wrap:balance;letter-spacing:.01em}
+h2{font-size:clamp(48px,8vw,104px)}
+p{margin:0}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:16px 26px;border-radius:999px;border:1px solid var(--line);background:transparent;font:700 15px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background .25s,color .25s,border-color .25s,transform .25s}
+.btn:hover{border-color:var(--flame);transform:translateY(-2px)}
+.btn-fire{background:var(--ember);border-color:var(--ember);color:#1a0a03}
+.btn-fire:hover{background:var(--flame);border-color:var(--flame)}
+
+/* NAV */
+.nav{position:fixed;inset:0 0 auto 0;z-index:40;padding-top:env(safe-area-inset-top,0px);transition:background .3s,backdrop-filter .3s}
+.nav.solid{background:color-mix(in srgb,var(--char) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:72px}
+.brand{font:900 30px/1 var(--display);letter-spacing:.08em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand i{width:12px;height:12px;border-radius:50%;background:var(--ember);box-shadow:0 0 14px 3px var(--ember);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 22px 6px var(--flame);background:var(--flame)}}
+.nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0}
+.nav ul a{font:700 15px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;color:var(--ash);transition:color .2s}
+.nav ul a:hover{color:var(--bone)}
+.burger{display:none;background:none;border:1px solid var(--line);border-radius:999px;padding:10px 16px;font:700 14px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+@media (max-width:820px){
+  .nav ul{position:fixed;inset:72px 0 auto 0;flex-direction:column;gap:0;background:var(--soot);border-bottom:1px solid var(--line);padding:8px 16px 20px;transform:translateY(-120%);transition:transform .35s}
+  .nav ul.open{transform:none}
+  .nav ul a{display:block;padding:16px 4px;font-size:22px;color:var(--bone);border-bottom:1px solid var(--line)}
+  .burger{display:inline-flex}
+  .nav .btn{display:none}
+}
+
+/* HERO */
+.hero{position:relative;min-height:min(880px,100svh);display:grid;align-items:end;padding-block:120px 64px;overflow:hidden;isolation:isolate}
+#embers{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.hero::after{content:"";position:absolute;inset:auto 0 0 0;height:55%;z-index:-2;background:radial-gradient(70% 90% at 50% 100%,rgba(255,90,31,.42),rgba(255,90,31,.08) 55%,transparent 75%)}
+.hero h1{font-size:clamp(96px,23vw,320px);letter-spacing:-.01em;line-height:.8;filter:url(#haze);
+  background:linear-gradient(180deg,var(--bone) 30%,var(--flame) 72%,var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:end;margin-top:28px}
+.hero-grid p{font-size:clamp(19px,2vw,24px);max-width:34ch;color:var(--bone)}
+.hero-grid p em{color:var(--flame)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end}
+.status{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;font:700 13px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--ash);margin-bottom:22px;background:color-mix(in srgb,var(--char) 60%,transparent)}
+.status b{width:8px;height:8px;border-radius:50%;background:var(--ash)}
+.status.open b{background:var(--leaf);box-shadow:0 0 10px var(--leaf)}
+.status.open{color:var(--bone)}
+@media (max-width:820px){.hero-grid{grid-template-columns:1fr}.hero-cta{justify-content:flex-start}}
+
+/* WOOD MARQUEE */
+.wood{border-block:1px solid var(--line);overflow:hidden;padding-block:18px;background:var(--soot)}
+.wood-track{display:flex;gap:56px;width:max-content;animation:slide 38s linear infinite}
+.wood span{font:700 28px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--ash)}
+.wood span b{color:var(--flame);font-weight:700}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* FIRE TIMELINE */
+.fire{padding-block:120px}
+.fire-head{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:64px}
+.fire-head p{color:var(--ash);font-size:20px;max-width:42ch}
+.fire-rows{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line)}
+.fire-row{padding:32px 28px 36px 0;border-right:1px solid var(--line);display:grid;gap:14px}
+.fire-row:last-child{border-right:0}
+.fire-row+.fire-row{padding-left:28px}
+.fire-row time{font:900 64px/1 var(--display);color:var(--bone);font-variant-numeric:tabular-nums}
+.fire-row h3{font-size:28px;color:var(--flame)}
+.fire-row p{color:var(--ash)}
+.therm{height:6px;border-radius:6px;background:var(--soot-2);overflow:hidden}
+.therm i{display:block;height:100%;width:var(--t,0%);background:linear-gradient(90deg,var(--flame),var(--ember));transition:width 1.6s cubic-bezier(.2,.8,.2,1)}
+.fire-row small{font:700 13px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--ash)}
+@media (max-width:820px){.fire-head{grid-template-columns:1fr}.fire-rows{grid-template-columns:1fr}.fire-row,.fire-row+.fire-row{border-right:0;border-bottom:1px solid var(--line);padding:28px 0}}
+
+/* MENU */
+.menu{padding-block:120px;background:var(--soot)}
+.menu-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:24px;margin-bottom:40px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab{padding:12px 18px;border-radius:999px;border:1px solid var(--line);background:transparent;font:700 15px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ash);cursor:pointer;transition:all .2s}
+.tab[aria-selected="true"]{background:var(--bone);border-color:var(--bone);color:var(--char)}
+.veg{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font:700 14px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ash)}
+.veg input{appearance:none;width:44px;height:24px;border-radius:24px;background:var(--soot-2);border:1px solid var(--line);position:relative;cursor:pointer;transition:background .2s}
+.veg input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--ash);transition:transform .2s,background .2s}
+.veg input:checked{background:color-mix(in srgb,var(--leaf) 35%,var(--soot-2))}
+.veg input:checked::after{transform:translateX(20px);background:var(--leaf)}
+.dishes{display:grid;grid-template-columns:1fr 1fr;gap:0 56px}
+.dish{display:grid;grid-template-columns:1fr auto;gap:6px 20px;padding:22px 0;border-bottom:1px dashed var(--line);animation:rise .5s both}
+.dish h3{font-size:30px;font-weight:700;letter-spacing:.02em;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.dish .price{font:700 28px/1 var(--display);color:var(--flame);font-variant-numeric:tabular-nums}
+.dish p{grid-column:1/-1;color:var(--ash);font-style:italic}
+.tag{font:700 11px/1 var(--display);letter-spacing:.16em;padding:5px 8px;border-radius:4px;border:1px solid currentColor}
+.tag.v{color:var(--leaf)}.tag.s{color:var(--flame)}
+@keyframes rise{from{opacity:.2;transform:translateY(14px)}}
+@media (max-width:820px){.dishes{grid-template-columns:1fr}}
+.empty{padding:40px 0;color:var(--ash);font-style:italic}
+
+/* DONENESS */
+@property --core{syntax:'<color>';inherits:false;initial-value:#c63a3f}
+@property --mid{syntax:'<color>';inherits:false;initial-value:#d9604a}
+.cook{padding-block:120px}
+.cook-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.steak{aspect-ratio:1.45;max-width:100%;border-radius:46% 54% 50% 50%/55% 48% 52% 45%;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 72% 62% at 50% 52%,var(--core) 0 40%,var(--mid) 58%,#6b3a22 74%,#3b1d10 84%,#1a0c06 100%);
+  box-shadow:0 40px 80px -30px rgba(255,90,31,.45);transition:--core .7s,--mid .7s;rotate:-6deg}
+.steak::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(0,0,0,.42) 46px 54px);mix-blend-mode:multiply}
+.steak::after{content:"";position:absolute;inset:6%;border-radius:inherit;border:2px solid rgba(255,235,210,.18);mask:linear-gradient(transparent 0 60%,#000)}
+.donenesses{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0}
+.temp{font:900 clamp(80px,12vw,150px)/1 var(--display);color:var(--bone);font-variant-numeric:tabular-nums}
+.temp sup{font-size:.35em;color:var(--flame);vertical-align:top;margin-left:6px}
+.cook p.desc{color:var(--ash);font-size:20px;max-width:40ch;min-height:3.2em}
+@media (max-width:820px){.cook-grid{grid-template-columns:1fr}}
+
+/* RESERVATION */
+.resa{padding-block:120px;background:linear-gradient(180deg,var(--soot),var(--char))}
+.resa-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start}
+.resa-copy p{color:var(--ash);font-size:20px;margin-top:20px;max-width:38ch}
+.panel{background:var(--soot-2);border:1px solid var(--line);border-radius:22px;padding:clamp(20px,3vw,32px);display:grid;grid-template-columns:minmax(0,1fr);gap:22px;min-width:0}
+#resaSteps>div{grid-template-columns:minmax(0,1fr)}
+#resaSteps>div>*{min-width:0}
+.field-label{font:700 13px/1 var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:10px;display:block}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.day{flex:0 0 auto;width:64px;padding:10px 0;border-radius:14px;border:1px solid var(--line);background:transparent;cursor:pointer;display:grid;gap:4px;text-align:center}
+.day span{font:700 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ash)}
+.day b{font:900 26px/1 var(--display)}
+.day[disabled]{opacity:.3;cursor:not-allowed}
+.day[aria-pressed="true"]{background:var(--ember);border-color:var(--ember);color:#1a0a03}
+.day[aria-pressed="true"] span{color:#1a0a03}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px}
+.slot{padding:12px 0;border-radius:12px;border:1px solid var(--line);background:transparent;font:700 17px/1 var(--display);letter-spacing:.06em;cursor:pointer;font-variant-numeric:tabular-nums}
+.slot[aria-pressed="true"]{background:var(--bone);color:var(--char);border-color:var(--bone)}
+.slot[disabled]{text-decoration:line-through;opacity:.35;cursor:not-allowed}
+.stepper{display:flex;align-items:center;gap:16px}
+.stepper button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;font:700 22px/1 var(--display);cursor:pointer}
+.stepper output{font:900 34px/1 var(--display);min-width:3ch;text-align:center;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--char);font-size:17px}
+.input:focus{border-color:var(--flame);outline:none}
+.recap{font:700 15px/1.4 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--flame)}
+.err{color:#ff8a6b;font-size:16px;min-height:1.2em}
+.done{text-align:center;display:grid;gap:14px;justify-items:center;padding:30px 0}
+.done .flame-ok{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,var(--flame),var(--ember));color:#1a0a03;font:900 40px/1 var(--display);animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.3)}}
+@media (max-width:900px){.resa-grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}}
+
+/* INFOS */
+.infos{padding-block:120px}
+.infos-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:56px}
+.hours{width:100%;border-collapse:collapse;font-size:19px}
+.hours td{padding:14px 0;border-bottom:1px solid var(--line)}
+.hours td:last-child{text-align:right;font-family:var(--display);font-weight:700;letter-spacing:.06em;font-size:21px;font-variant-numeric:tabular-nums}
+.hours tr.today td{color:var(--flame)}
+.hours tr.today td:first-child::after{content:" · aujourd’hui";font-style:italic;font-size:15px}
+.map{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:var(--soot);aspect-ratio:4/3;max-width:100%}
+.map svg{width:100%;height:100%;display:block}
+.pin{position:absolute;left:54%;top:46%;width:18px;height:18px;margin:-9px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 0 rgba(255,90,31,.6);animation:ring 2s infinite}
+@keyframes ring{to{box-shadow:0 0 0 34px rgba(255,90,31,0)}}
+.addr{display:grid;gap:6px;margin-top:20px;font-size:19px}
+.addr span{color:var(--ash)}
+@media (max-width:820px){.infos-grid{grid-template-columns:1fr}}
+
+footer{border-top:1px solid var(--line);padding-block:48px 120px;color:var(--ash)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;align-items:end}
+footer .big{font:900 clamp(60px,14vw,180px)/.8 var(--display);color:var(--soot-2);letter-spacing:-.01em;-webkit-text-stroke:1px var(--line)}
+
+/* NR.EVO DEMO PILL */
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.hero h1{filter:none}html{scroll-behavior:auto}}
+/* NR.EVO : pastille de démo */
+.demo-pill{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:7px 7px 7px 12px;background:#0d0c11;border:1.5px solid #c58af9;font:500 13px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;color:#f4effc;max-width:calc(100% - 24px)}
+.demo-pill img{width:26px;height:auto}
+.demo-pill .f{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo-pill .f b{color:#c58af9}
+.demo-pill button,.demo-pill a{flex:0 0 auto;padding:8px 12px;border:0;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;text-decoration:none}
+.demo-pill button{background:#2a2433;color:#f4effc}
+.demo-pill a{background:#c58af9;color:#0d0c11}
+.pill-panel{position:absolute;left:0;bottom:calc(100% + 10px);width:min(340px,calc(100vw - 24px));background:#ffffff;color:#0d0c11;border:1.5px solid #0d0c11;box-shadow:6px 6px 0 #c58af9;padding:18px;display:grid;gap:10px}
+.pill-panel b{font-size:16px}
+.pill-panel ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}
+.pill-panel li::before{content:"✓ ";color:#6c33c0;font-weight:700}
+.pill-panel li.no{color:#77707f}
+.pill-panel li.no::before{content:"— ";color:#77707f}
+.pill-panel .lv{display:flex;gap:4px}
+.pill-panel .lv i{width:22px;height:9px;border:1.5px solid #0d0c11}
+.pill-panel .lv i.on{background:#c58af9}
+.demo-pill .pill-panel a{justify-self:start;background:none;padding:0;color:#6c33c0;font-weight:700;font-size:14px}
+@media (max-width:560px){.demo-pill .f small{display:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="haze"><feTurbulence id="hazeNoise" type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+</svg>
+
+<nav class="nav" id="nav">
+  <div class="wrap">
+    <a href="#top" class="brand"><i></i>Braise</a>
+    <ul id="menuList">
+      <li><a href="#feu">Le feu</a></li>
+      <li><a href="#carte">La carte</a></li>
+      <li><a href="#cuisson">Cuisson</a></li>
+      <li><a href="#infos">Infos</a></li>
+    </ul>
+    <a href="#reserver" class="btn btn-fire">Réserver</a>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="menuList">Menu</button>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="status" id="status"><b></b><span>Horaires</span></div>
+    <h1>Braise</h1>
+    <div class="hero-grid">
+      <p>Grill au feu de bois dans le 11<sup>e</sup>. Viandes maturées, légumes de saison et pain cuit dans les dernières <em>braises</em> du service.</p>
+      <div class="hero-cta">
+        <a href="#reserver" class="btn btn-fire">Réserver une table</a>
+        <a href="#carte" class="btn">Voir la carte</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wood" aria-label="Les bois utilisés">
+  <div class="wood-track">
+    <span>Chêne <b>· 650 °C</b></span><span>Hêtre <b>· 600 °C</b></span><span>Sarments de vigne <b>· 700 °C</b></span><span>Charbon de bois <b>· 550 °C</b></span><span>Pommier <b>· 580 °C</b></span>
+    <span>Chêne <b>· 650 °C</b></span><span>Hêtre <b>· 600 °C</b></span><span>Sarments de vigne <b>· 700 °C</b></span><span>Charbon de bois <b>· 550 °C</b></span><span>Pommier <b>· 580 °C</b></span>
+  </div>
+</div>
+
+<section class="fire" id="feu">
+  <div class="wrap">
+    <div class="fire-head">
+      <div><span class="eyebrow">Le feu, chaque jour</span><h2 style="margin-top:16px">Pas de gaz.<br>Que du bois.</h2></div>
+      <p>Le foyer s’allume deux heures avant le service. On attend que les flammes tombent pour cuire sur la braise, là où la chaleur est régulière.</p>
+    </div>
+    <div class="fire-rows">
+      <article class="fire-row"><small>Allumage</small><time>17:00</time><h3>Les flammes</h3><p>Chêne sec et sarments. Le foyer monte en température et chauffe la sole en pierre.</p><div class="therm" style="--t:0%" data-t="92%"><i></i></div><small>≈ 700 °C</small></article>
+      <article class="fire-row"><small>Préparation</small><time>18:30</time><h3>La braise</h3><p>Les flammes retombent. On étale la braise sous la grille, en zones chaude et douce.</p><div class="therm" style="--t:0%" data-t="78%"><i></i></div><small>≈ 600 °C</small></article>
+      <article class="fire-row"><small>Service</small><time>19:00</time><h3>À table</h3><p>Viandes, poissons, légumes. Le pain finit sa cuisson dans la cendre chaude.</p><div class="therm" style="--t:0%" data-t="60%"><i></i></div><small>≈ 450 °C</small></article>
+    </div>
+  </div>
+</section>
+
+<section class="menu" id="carte">
+  <div class="wrap">
+    <div class="menu-top">
+      <div><span class="eyebrow">Carte d’automne</span><h2 style="margin-top:16px">La carte</h2></div>
+      <label class="veg"><input type="checkbox" id="vegOnly"> Végétarien</label>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="dishes" id="dishes" role="tabpanel" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="cook" id="cuisson">
+  <div class="wrap cook-grid">
+    <div class="steak" id="steak" aria-hidden="true"></div>
+    <div>
+      <span class="eyebrow">Côte de bœuf maturée 35 jours</span>
+      <h2 style="margin-top:16px;font-size:clamp(44px,6vw,80px)">Choisissez votre cuisson</h2>
+      <div class="donenesses" role="radiogroup" aria-label="Cuisson" id="doneness"></div>
+      <div class="temp" id="temp" aria-live="polite">52<sup>°C</sup></div>
+      <p class="desc" id="cookDesc"></p>
+    </div>
+  </div>
+</section>
+
+<section class="resa" id="reserver">
+  <div class="wrap resa-grid">
+    <div class="resa-copy">
+      <span class="eyebrow">Réservation</span>
+      <h2 style="margin-top:16px">Une table près du feu</h2>
+      <p>Choisissez le jour, le créneau et le nombre de couverts. Au-delà de 10 personnes, appelez-nous pour la privatisation de la salle du foyer.</p>
+      <p style="margin-top:28px;color:var(--bone)"><span class="field-label">Téléphone</span><span style="font:900 34px/1 var(--display);letter-spacing:.04em">01 23 45 67 89</span></p>
+    </div>
+    <form class="panel" id="resaForm" novalidate>
+      <div id="resaSteps">
+        <div style="display:grid;gap:22px">
+          <div><span class="field-label" id="dayLbl">Jour</span><div class="days" id="days" role="group" aria-labelledby="dayLbl"></div></div>
+          <div><span class="field-label" id="slotLbl">Créneau</span><div class="slots" id="slots" role="group" aria-labelledby="slotLbl"></div></div>
+          <div><span class="field-label">Couverts</span><div class="stepper"><button type="button" id="minus" aria-label="Retirer un couvert">−</button><output id="guests">2</output><button type="button" id="plus" aria-label="Ajouter un couvert">+</button></div></div>
+          <div class="two">
+            <div><label class="field-label" for="rName">Nom</label><input class="input" id="rName" autocomplete="name" placeholder="Camille Martin"></div>
+            <div><label class="field-label" for="rPhone">Téléphone</label><input class="input" id="rPhone" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78"></div>
+          </div>
+          <div class="recap" id="recap">—</div>
+          <div class="err" id="rErr" role="alert"></div>
+          <button class="btn btn-fire" type="submit" style="justify-content:center">Envoyer ma demande</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="infos" id="infos">
+  <div class="wrap">
+    <span class="eyebrow">Infos pratiques</span>
+    <h2 style="margin-top:16px">Venir chez Braise</h2>
+    <div class="infos-grid">
+      <div>
+        <table class="hours" id="hours"><tbody></tbody></table>
+        <div class="addr"><strong>18 rue des Braises, 75011 Paris</strong><span>Métro Voltaire · ligne 9</span><span>contact@braise-demo.fr</span></div>
+      </div>
+      <div class="map" aria-label="Plan d’accès stylisé">
+        <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="400" height="300" fill="#1b1512"/>
+          <g stroke="#2d241f" stroke-width="14" fill="none" stroke-linecap="round">
+            <path d="M-10 70 L410 120"/><path d="M-10 210 L410 180"/><path d="M90 -10 L150 310"/><path d="M280 -10 L240 310"/><path d="M-10 290 L200 -10"/>
+          </g>
+          <g stroke="#3a2e27" stroke-width="3" fill="none"><path d="M-10 150 L410 150" stroke-dasharray="6 8"/></g>
+          <g fill="#a39388" font-family="Big Shoulders Display, Arial Narrow, sans-serif" font-size="11" font-weight="700" letter-spacing="1.5">
+            <text x="300" y="112" transform="rotate(7 300 112)">BD VOLTAIRE</text>
+            <text x="20" y="200" transform="rotate(-4 20 200)">RUE DES BRAISES</text>
+          </g>
+          <circle cx="216" cy="138" r="5" fill="#ffb238"/>
+          <text x="226" y="132" fill="#f3e9dc" font-family="Big Shoulders Display, Arial Narrow, sans-serif" font-size="12" font-weight="900" letter-spacing="1.5">M · VOLTAIRE</text>
+        </svg>
+        <div class="pin"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="big">Braise</div>
+    <div style="display:grid;gap:6px;text-align:right">
+      <span>Instagram · @braise.demo</span>
+      <span>Restaurant fictif — site de démonstration</span>
+    </div>
+  </div>
+</footer>
+
+<div class="demo-pill" role="note">
+  <img src="../assets/mark.png" alt="NR.EVO">
+  <span class="f"><b>Formule 2</b> · Site Premium <small>· Restaurant fictif</small></span>
+  <button type="button" id="pillBtn" aria-expanded="false" aria-controls="pillPanel">Inclus</button>
+  <a href="../realisations.html">Retour</a>
+  <div class="pill-panel" id="pillPanel" hidden>
+    <div class="lv"><i class="on"></i><i class="on"></i><i></i></div>
+    <b>Ce que montre cette démo</b>
+    <ul><li>Tout le Site Essentiel</li><li>Design sur mesure à l’image du restaurant</li><li>Animations : braises, chaleur sur le titre</li><li>Interactions : carte filtrable, choix de cuisson</li><li>Réservation en ligne</li><li>Horaires « ouvert / fermé » en direct</li><li class="no">Pas d’automatisations derrière (Site + Grow)</li></ul>
+    <a href="../site-premium.html">Voir la formule Premium →</a>
+  </div>
+</div>
+<script>(()=>{const b=document.getElementById('pillBtn'),p=document.getElementById('pillPanel');b.addEventListener('click',()=>{const o=p.hidden;p.hidden=!o;b.setAttribute('aria-expanded',o)})})();</script>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = s => document.querySelector(s);
+
+  /* nav */
+  const nav = $('#nav');
+  const onScroll = () => nav.classList.toggle('solid', scrollY > 40);
+  addEventListener('scroll', onScroll, {passive:true}); onScroll();
+  const burger = $('#burger'), list = $('#menuList');
+  burger.addEventListener('click', () => { const o = list.classList.toggle('open'); burger.setAttribute('aria-expanded', o); burger.textContent = o ? 'Fermer' : 'Menu'; });
+  list.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { list.classList.remove('open'); burger.setAttribute('aria-expanded', false); burger.textContent = 'Menu'; }));
+
+  /* opening hours (0=dimanche) */
+  const H = {0:[[12,0,16,0]],1:[],2:[[12,0,14,30],[19,0,23,30]],3:[[12,0,14,30],[19,0,23,30]],4:[[12,0,14,30],[19,0,23,30]],5:[[12,0,14,30],[19,0,23,30]],6:[[12,0,14,30],[19,0,23,30]]};
+  const names = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const fmt = (h,m) => String(h).padStart(2,'0') + 'h' + (m ? String(m).padStart(2,'0') : '');
+  const now = new Date(), today = now.getDay();
+  const tb = $('#hours tbody');
+  [1,2,3,4,5,6,0].forEach(d => {
+    const tr = document.createElement('tr'); if (d === today) tr.className = 'today';
+    tr.innerHTML = `<td>${names[d]}</td><td>${H[d].length ? H[d].map(r => fmt(r[0],r[1]) + '–' + fmt(r[2],r[3])).join(' · ') : 'Fermé'}</td>`;
+    tb.appendChild(tr);
+  });
+  const mins = now.getHours()*60 + now.getMinutes();
+  const cur = H[today].find(r => mins >= r[0]*60+r[1] && mins < r[2]*60+r[3]);
+  const st = $('#status');
+  if (cur) { st.classList.add('open'); st.querySelector('span').textContent = 'Ouvert · ferme à ' + fmt(cur[2],cur[3]); }
+  else {
+    const next = H[today].find(r => mins < r[0]*60+r[1]);
+    st.querySelector('span').textContent = next ? 'Fermé · ouvre à ' + fmt(next[0],next[1]) : 'Fermé pour aujourd’hui';
+  }
+
+  /* embers */
+  const cv = $('#embers'), ctx = cv.getContext('2d');
+  let W, Hh, dpr, parts = [], mouse = {x:-999,y:-999,vx:0};
+  function size(){ dpr = Math.min(devicePixelRatio||1, 2); W = cv.clientWidth; Hh = cv.clientHeight; cv.width = W*dpr; cv.height = Hh*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  size(); addEventListener('resize', size);
+  const spawn = (init) => ({x:Math.random()*W, y: init ? Math.random()*Hh : Hh + 10, r: Math.random()*2.2+.4, vy: -(Math.random()*1.1+.35), vx:(Math.random()-.5)*.4, life: Math.random()*.6+.4, ph: Math.random()*6.28});
+  const N = Math.min(220, Math.round(W/6));
+  for (let i=0;i<N;i++) parts.push(spawn(true));
+  cv.parentElement.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mouse.vx = (e.clientX - r.left) - mouse.x; mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
+  let visible = true;
+  new IntersectionObserver(([e]) => visible = e.isIntersecting).observe(cv);
+  function draw(t){
+    if (visible){
+      ctx.clearRect(0,0,W,Hh);
+      ctx.globalCompositeOperation = 'lighter';
+      for (const p of parts){
+        const dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx*dx+dy*dy;
+        if (d2 < 14000){ p.vx += mouse.vx*.012 + dx/d2*6; }
+        p.vx *= .985; p.x += p.vx + Math.sin(t/900 + p.ph)*.35; p.y += p.vy;
+        const k = Math.max(0, p.y / Hh);
+        const fl = .55 + .45*Math.sin(t/120 + p.ph*3);
+        const a = Math.min(1, k*1.4) * p.life * fl;
+        const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*5);
+        g.addColorStop(0, `rgba(255,${180+Math.round(60*k)},90,${a})`);
+        g.addColorStop(.35, `rgba(255,${90+Math.round(40*k)},31,${a*.55})`);
+        g.addColorStop(1, 'rgba(255,60,10,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r*5,0,6.283); ctx.fill();
+        if (p.y < -20 || p.x < -40 || p.x > W+40) Object.assign(p, spawn(false));
+      }
+      mouse.vx *= .9;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+  /* heat haze on title */
+  const noise = document.getElementById('hazeNoise');
+  if (!reduce && noise){ let f = 0; (function haze(){ f += .006; noise.setAttribute('baseFrequency', `${0.012 + Math.sin(f)*0.004} ${0.04 + Math.cos(f*1.3)*0.012}`); requestAnimationFrame(haze); })(); }
+
+  /* thermometers */
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ e.target.style.setProperty('--t', e.target.dataset.t); io.unobserve(e.target); } }), {threshold:.6});
+  document.querySelectorAll('.therm').forEach(el => io.observe(el));
+
+  /* menu */
+  const MENU = {
+    'À partager': [
+      ['Pain de la braise','Levain cuit dans la cendre, beurre fumé au foin.',6,['v']],
+      ['Poireaux brûlés','Vinaigrette noisette, œuf mollet, chapelure de seigle.',12,['v']],
+      ['Tartare de bœuf au couteau','Jaune confit, câpres frites, piment fumé.',16,['s']],
+      ['Burrata & courge rôtie','Courge passée au feu, graines torréfiées, sauge.',15,['v']],
+    ],
+    'Au feu': [
+      ['Côte de bœuf 35 jours','1 kg pour deux, sel de Guérande, jus réduit au thym.',89,['s']],
+      ['Poulpe grillé','Chorizo ibérique, pommes grenaille, aïoli au citron brûlé.',29,[]],
+      ['Chou pointu entier','Laqué au miso, crème de sarrasin, oignon frit.',22,['v']],
+      ['Bar de ligne en croûte de sel','Fenouil braisé, beurre blanc aux agrumes.',34,[]],
+      ['Agneau de lait','Épaule confite 12 h puis saisie, harissa verte.',31,['s']],
+    ],
+    'Garnitures': [
+      ['Frites au saindoux','Double cuisson, sel fumé.',6,[]],
+      ['Purée à la braise','Pommes de terre cuites dans la cendre, beurre noisette.',7,['v']],
+      ['Salade de saison','Herbes du marché, vinaigrette au miel brûlé.',6,['v']],
+    ],
+    'Desserts': [
+      ['Ananas rôti au foyer','Rhum ambré, glace coco, citron vert.',11,['v']],
+      ['Chocolat fumé','Ganache au bois de hêtre, crème crue, sel.',12,['v']],
+      ['Pain perdu à la braise','Brioche, caramel beurre salé, glace vanille.',11,['v']],
+    ],
+    'Cave': [
+      ['Côtes-du-Rhône · rouge','Grenache, syrah. Le verre / la bouteille.','7 / 34',['v']],
+      ['Saumur · blanc','Chenin sec et tendu.','8 / 38',['v']],
+      ['Bière de la maison','Ambrée, brassée à Montreuil.',7,['v']],
+      ['Citronnade fumée','Citron, romarin, sirop au bois.',6,['v']],
+    ],
+  };
+  const tabs = $('#tabs'), dishes = $('#dishes'), vegOnly = $('#vegOnly');
+  let current = 'Au feu';
+  Object.keys(MENU).forEach(k => {
+    const b = document.createElement('button'); b.className = 'tab'; b.type = 'button'; b.role = 'tab'; b.textContent = k;
+    b.setAttribute('aria-selected', k === current);
+    b.addEventListener('click', () => { current = k; tabs.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b)); render(); });
+    tabs.appendChild(b);
+  });
+  function render(){
+    const items = MENU[current].filter(d => !vegOnly.checked || d[3].includes('v'));
+    dishes.innerHTML = items.length ? items.map((d,i) => `
+      <article class="dish" style="animation-delay:${i*60}ms">
+        <h3>${d[0]} ${d[3].includes('v') ? '<span class="tag v">Végé</span>' : ''}${d[3].includes('s') ? '<span class="tag s">Signature</span>' : ''}</h3>
+        <span class="price">${d[2]}${typeof d[2]==='number' ? ' €' : ' €'}</span>
+        <p>${d[1]}</p>
+      </article>`).join('') : '<p class="empty">Pas de plat végétarien dans cette rubrique. Regardez « À partager » ou « Desserts ».</p>';
+  }
+  vegOnly.addEventListener('change', render); render();
+
+  /* doneness */
+  const DONE = [
+    ['Bleu', 45, '#9e1b2c', '#b5332e', 'Saisie très vive, cœur à peine tiède. Pour les puristes.'],
+    ['Saignant', 52, '#c63a3f', '#d9604a', 'Croûte marquée, cœur rouge et juteux. La cuisson du chef.'],
+    ['À point', 57, '#d97a6a', '#c9875f', 'Cœur rosé sur toute l’épaisseur, jus bien réparti.'],
+    ['Bien cuit', 65, '#a8785f', '#8e6248', 'Cuit à cœur, repos prolongé pour garder le moelleux.'],
+  ];
+  const dWrap = $('#doneness'), steak = $('#steak'), temp = $('#temp'), cdesc = $('#cookDesc');
+  let shown = 52;
+  function setDone(i){
+    const d = DONE[i];
+    dWrap.querySelectorAll('button').forEach((b,j) => { b.setAttribute('aria-checked', j===i); b.setAttribute('aria-pressed', j===i); b.className = 'tab'; b.style.cssText = j===i ? 'background:var(--bone);color:var(--char);border-color:var(--bone)' : ''; });
+    steak.style.setProperty('--core', d[2]); steak.style.setProperty('--mid', d[3]);
+    cdesc.textContent = d[4];
+    const from = shown, to = d[1], t0 = performance.now();
+    (function tick(t){ const k = Math.min(1,(t-t0)/600); shown = Math.round(from + (to-from)*(1-Math.pow(1-k,3))); temp.innerHTML = shown + '<sup>°C à cœur</sup>'; if (k<1) requestAnimationFrame(tick); })(t0);
+  }
+  DONE.forEach((d,i) => { const b = document.createElement('button'); b.type='button'; b.setAttribute('role','radio'); b.textContent = d[0]; b.addEventListener('click', () => setDone(i)); dWrap.appendChild(b); });
+  setDone(1);
+
+  /* reservation */
+  const daysEl = $('#days'), slotsEl = $('#slots'), recap = $('#recap');
+  const sel = {day:null, slot:null, guests:2};
+  const short = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const months = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const days = [];
+  for (let i=0;i<14;i++){ const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+i); days.push(d); }
+  const hash = s => { let h = 0; for (const c of s) h = (h*31 + c.charCodeAt(0)) >>> 0; return h; };
+  days.forEach((d,i) => {
+    const b = document.createElement('button'); b.type='button'; b.className='day';
+    b.innerHTML = `<span>${i===0?'Auj.':short[d.getDay()]}</span><b>${d.getDate()}</b>`;
+    b.setAttribute('aria-label', d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}));
+    if (!H[d.getDay()].length) b.disabled = true;
+    b.setAttribute('aria-pressed', false);
+    b.addEventListener('click', () => { sel.day = d; sel.slot = null; daysEl.querySelectorAll('.day').forEach(x => x.setAttribute('aria-pressed', x===b)); renderSlots(); upd(); });
+    daysEl.appendChild(b);
+  });
+  function renderSlots(){
+    slotsEl.innerHTML = '';
+    if (!sel.day){ slotsEl.innerHTML = '<span style="color:var(--ash)">Choisissez d’abord un jour.</span>'; return; }
+    const ranges = H[sel.day.getDay()];
+    const isToday = sel.day.toDateString() === new Date().toDateString();
+    ranges.forEach(r => {
+      for (let m = r[0]*60+r[1]; m <= r[2]*60+r[3]-90; m += 30){
+        const label = fmt(Math.floor(m/60), m%60);
+        const b = document.createElement('button'); b.type='button'; b.className='slot'; b.textContent = label;
+        const full = hash(sel.day.toDateString()+label) % 5 === 0;
+        const past = isToday && m <= new Date().getHours()*60 + new Date().getMinutes() + 30;
+        if (full || past){ b.disabled = true; b.title = full ? 'Complet' : 'Créneau passé'; }
+        b.setAttribute('aria-pressed', false);
+        b.addEventListener('click', () => { sel.slot = label; slotsEl.querySelectorAll('.slot').forEach(x => x.setAttribute('aria-pressed', x===b)); upd(); });
+        slotsEl.appendChild(b);
+      }
+    });
+    if (!slotsEl.children.length) slotsEl.innerHTML = '<span style="color:var(--ash)">Plus de créneau ce jour-là. Essayez demain.</span>';
+  }
+  const gOut = $('#guests');
+  $('#minus').addEventListener('click', () => { sel.guests = Math.max(1, sel.guests-1); gOut.textContent = sel.guests; upd(); });
+  $('#plus').addEventListener('click', () => { sel.guests = Math.min(10, sel.guests+1); gOut.textContent = sel.guests; upd(); });
+  function upd(){
+    recap.textContent = sel.day ? `${sel.day.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}${sel.slot ? ' · ' + sel.slot : ''} · ${sel.guests} couvert${sel.guests>1?'s':''}` : 'Sélectionnez un jour et un créneau';
+  }
+  const firstOpen = daysEl.querySelector('.day:not([disabled])');
+  if (firstOpen) firstOpen.click(); else { renderSlots(); upd(); }
+  $('#resaForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const err = $('#rErr'), name = $('#rName').value.trim(), phone = $('#rPhone').value.replace(/\s/g,'');
+    if (!sel.slot) return err.textContent = 'Choisissez un créneau.';
+    if (name.length < 2) return err.textContent = 'Indiquez votre nom pour la réservation.';
+    if (!/^(\+33|0)[1-9]\d{8}$/.test(phone)) return err.textContent = 'Numéro de téléphone invalide (10 chiffres, ex. 06 12 34 56 78).';
+    err.textContent = '';
+    $('#resaSteps').innerHTML = `<div class="done"><div class="flame-ok">✓</div><h3 style="font-size:40px">Demande envoyée</h3><p style="color:var(--ash);max-width:34ch">${name}, votre table pour ${sel.guests} le ${sel.day.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})} à ${sel.slot} est en attente de confirmation par SMS.</p><p style="font:700 12px/1.4 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--flame)">Démo : aucune réservation réelle n’est créée</p><button type="button" class="btn" onclick="location.reload()">Nouvelle réservation</button></div>`;
+  });
+})();
+</script>
+</body>
+</html>

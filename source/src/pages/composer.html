@@ -1,0 +1,47 @@
+<!--META {"title":"Composer mon pack · NR.EVO","desc":"Composez votre pack NR.EVO : une formule de site et les modules utiles à votre projet.","active":"comp"} -->
+<section class="phero" style="padding-bottom:clamp(32px,4vw,56px)">
+  {{CODE:composer}}
+  <div class="wrap">
+    <nav class="crumb" aria-label="Fil d’Ariane"><a href="index.html">Accueil</a><span>/</span><span>Composer mon pack</span></nav>
+    <div class="phero-grid">
+      <h1 class="h1 rise"><span class="ln"><span>Composez</span></span><span class="ln"><span>votre <span class="hl">pack.</span></span></span></h1>
+      <p class="lead">Choisissez une base, ajoutez les modules utiles, puis recevez votre récapitulatif par email. On vous contacte ensuite pour parler des prix et des modalités.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec-sm" id="composer" style="padding-top:0">
+  <div class="wrap comp">
+    <div>
+      <h2 class="h3 step"><span>1</span>Votre site</h2>
+      <div class="bases" id="bases" role="radiogroup" aria-label="Formule de site"></div>
+      <h2 class="h3 step" style="margin-top:44px"><span>2</span>Les modules</h2>
+      <div id="mods"></div>
+      <p class="muted" style="margin-top:28px;max-width:52ch">Un doute sur un module ? <a class="ulink" href="a-la-carte.html">Lire le détail des prestations</a></p>
+      <h2 class="h3 step" style="margin-top:52px"><span>3</span>Vos coordonnées</h2>
+      <p class="muted" style="margin:-4px 0 22px;max-width:56ch">Pour recevoir votre récapitulatif. On vous contacte ensuite pour parler des prix et des modalités.</p>
+      <div class="fgrid" id="tkFields">
+        <label class="f2c"><span>Nom</span><input id="tkName" autocomplete="name" placeholder="Votre nom"></label>
+        <label class="f2c"><span>Email</span><input id="tkMail" type="email" autocomplete="email" placeholder="Votre adresse email"></label>
+        <label class="f2c"><span>Téléphone <i>facultatif</i></span><input id="tkTel" type="tel" autocomplete="tel" placeholder="06 12 34 56 78"></label>
+        <label class="f2c"><span>Entreprise <i>facultatif</i></span><input id="tkCo" autocomplete="organization" placeholder="Nom de votre entreprise"></label>
+        <label class="f2c full"><span>Précisions <i>facultatif</i></span><textarea id="tkMsg" rows="3" placeholder="Votre activité, votre site actuel, ce que vous aimeriez améliorer…"></textarea></label>
+        <input type="checkbox" id="tkBot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+      </div>
+    </div>
+    <aside class="ticket" aria-live="polite">
+      <div class="th"><b>NR.EVO</b><small>Votre pack</small></div>
+      <ul id="tkList"></ul>
+      <div class="tf">
+        <div class="tot"><span>Tarif</span><b>Sur devis</b></div>
+        <p class="hint" id="tkHint"></p>
+        <div class="bars" aria-hidden="true"></div>
+        <span class="code" id="tkCode"></span>
+        <div id="tkForm"><p class="rgpd">Vos informations servent uniquement à répondre à votre demande. <a href="confidentialite.html">En savoir plus</a></p><p class="ferr" id="tkErr" role="alert"></p><div class="row-btns"><button type="button" class="btn" id="tkSend">Envoyer mon récapitulatif {{ARROW}}</button><button type="button" class="ulink" id="tkReset" style="background:none;border:0;cursor:pointer">Réinitialiser</button></div></div>
+        <div class="tk-done" id="tkDone" hidden></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+{{NEXT:realisations.html|Réalisations}}

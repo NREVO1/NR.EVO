@@ -1,0 +1,47 @@
+<!--META {"title":"Récapitulatif de votre demande · NR.EVO","desc":"Le récapitulatif de votre sélection, à envoyer en un clic. On vous contacte ensuite pour parler des prix et des modalités.","active":"comp","cta":false} -->
+<section class="phero noprint" style="padding-bottom:clamp(24px,3vw,40px)">
+  <div class="wrap">
+    <nav class="crumb" aria-label="Fil d’Ariane"><a href="index.html">Accueil</a><span>/</span><a href="composer.html">Composer mon pack</a><span>/</span><span>Récapitulatif</span></nav>
+    <div class="phero-grid">
+      <h1 class="h1 rise" style="font-size:clamp(26px,4.2vw,80px)"><span class="ln"><span>Votre</span></span><span class="ln"><span><span class="hl">récapitulatif.</span></span></span></h1>
+      <div><p class="lead">Voici ce que vous avez choisi. Vérifiez vos coordonnées, puis envoyez-le (vous pourrez ensuite l’imprimer ou l’enregistrer en PDF) : on vous contacte pour parler des prix et des modalités.</p><div class="row-btns"><a class="ulink" href="composer.html" data-t="Composer mon pack">Modifier mon pack</a></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec-sm" style="padding-top:0">
+  <div class="wrap">
+    <div id="rcDone" class="noprint" hidden></div>
+    <article class="sheet" id="recap">
+      <div id="rcBody" style="display:grid;gap:clamp(22px,3vw,34px)">
+        <header class="sh-head">
+          <div class="brand"><img src="assets/mark.png" alt="" width="56" height="42"><b>NR.EVO</b><small>Energize. Refresh. Grow. Go Change The Game.</small></div>
+          <div class="sh-title"><h2>RÉCAPITULATIF</h2><p>Référence <b id="rcRef"></b></p><p>Date <b id="rcDate"></b></p></div>
+        </header>
+        <div>
+          <h3 class="k">Vos coordonnées</h3>
+          <div class="sh-two">
+            <label>Nom<input id="rcName" autocomplete="name" placeholder="Votre nom"></label>
+            <label>Entreprise<input id="rcCo" autocomplete="organization" placeholder="Nom de l’entreprise"></label>
+            <label>Email<input id="rcMail" type="email" autocomplete="email" placeholder="Votre adresse email"></label>
+            <label>Téléphone (facultatif)<input id="rcTel" type="tel" autocomplete="tel" placeholder="06 12 34 56 78"></label>
+          </div>
+        </div>
+        <div>
+          <h3 class="k">Votre sélection</h3>
+          <ul class="rc-list" id="rcList"></ul>
+        </div>
+        <div>
+          <h3 class="k">Précisions (facultatif)</h3>
+          <label><textarea id="rcMsg" rows="3" placeholder="Votre activité, votre site actuel, ce que vous aimeriez améliorer…"></textarea></label>
+        </div>
+        <div class="rc-note"><b>Pas de prix ici.</b><p>Les prix, les délais et les modalités se définissent avec vous, lors de notre échange. Ce récapitulatif ne vous engage à rien.</p></div>
+        <div class="rc-steps"><div><b>1</b><span>Vous envoyez ce récapitulatif.</span></div><div><b>2</b><span>On vous contacte pour en parler : prix et modalités.</span></div><div><b>3</b><span>On vous propose un devis, vous décidez.</span></div></div>
+        <input type="checkbox" id="rcBot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+        <p class="rgpd">Vos informations servent uniquement à répondre à votre demande. <a href="confidentialite.html">En savoir plus</a></p>
+        <p class="ferr" id="rcErr" role="alert"></p>
+        <div class="noprint"><button type="button" class="btn" id="rcSend">Envoyer mon récapitulatif {{ARROW}}</button></div>
+      </div>
+    </article>
+  </div>
+</section>
