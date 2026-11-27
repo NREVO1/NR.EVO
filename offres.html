@@ -822,11 +822,12 @@ offres.forEach((o) =&gt; afficher(o));</pre>
     }
   };
   const FORM = window.NR_CONFIG || {};
-  // Envoi FormSubmit avec délai maximal : évite qu'un formulaire reste bloqué indéfiniment.
-  const postForm = (url, data) => {
+  // Envoi par le script du site lui-même (envoyer.php) : aucun service externe.
+  // Délai maximal de 20 s pour qu'un formulaire ne reste jamais bloqué.
+  const postForm = data => {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
-    return fetch(url, {
+    const timer = setTimeout(() => controller.abort(), 20000);
+    return fetch(FORM.mailEndpoint || 'envoyer.php', {
       method: 'POST',
       headers: {'Content-Type': 'application/json', Accept: 'application/json'},
       body: JSON.stringify(data),
@@ -834,13 +835,11 @@ offres.forEach((o) =&gt; afficher(o));</pre>
     }).then(async response => {
       let result;
       try { result = await response.json(); }
-      catch (_) { throw new Error('réponse invalide du service email'); }
-      if (!response.ok || !(result.success === true || result.success === 'true')) {
-        throw new Error(result.message || `service email indisponible (HTTP ${response.status})`);
-      }
+      catch (_) { throw new Error(response.status === 404 || response.status === 405 ? 'envoi indisponible : envoyer.php est introuvable sur cet hébergement' : 'réponse invalide du serveur'); }
+      if (!response.ok || !result.ok) throw new Error(result.error || `serveur indisponible (HTTP ${response.status})`);
       return result;
     }).catch(error => {
-      if (error && error.name === 'AbortError') throw new Error('délai dépassé après 15 secondes');
+      if (error && error.name === 'AbortError') throw new Error('délai dépassé après 20 secondes');
       throw error;
     }).finally(() => clearTimeout(timer));
   };
@@ -871,18 +870,13 @@ offres.forEach((o) =&gt; afficher(o));</pre>
   const DESC = {'base-none': 'Votre site actuel est conservé : on intervient dessus.', 'base-ess': 'Site vitrine mobile et ordinateur, formulaire de contact, carte, réseaux sociaux, appels à l’action, mise en ligne.', 'base-prm': 'Tout l’Essentiel, avec design sur mesure, animations, interactions, galerie et fonctionnalités en plus.', 'base-grow': 'Site Essentiel ou Premium, outils de conversion, prise de rendez-vous et premières automatisations.', pro: 'Cible, recherche, qualification, contact, relances, suivi et rapport de résultats.', seo: 'Structure des pages, contenus, vitesse et fiche d’établissement.', aut: 'Tâches répétitives reliées entre elles : formulaire, notification, agenda, suivi.', frm: 'Formulaires qui envoient chaque demande au bon endroit.', eml: 'Accusés de réception, confirmations, rappels et relances automatiques.', rdv: 'Réservation de créneaux en ligne, agenda et confirmation.', crm: 'Fichier client organisé : qui a demandé quoi, où en est chaque prospect.', bot: 'FAQ automatique avec vos propres réponses.', ia: 'Outils d’IA utiles : rédaction, tri des demandes, réponses types.', ref: 'Refonte du site existant, en gardant ce qui fonctionne.', mnt: 'Mises à jour, sauvegardes et petites modifications.'};
   const packLines = p => { const L = []; if (p.base) L.push({label: p.base === 'none' ? 'Site existant conservé' : BASENAME[p.base], kind: 'Base', d: DESC['base-' + p.base]}); [...p.mods].forEach(m => L.push({label: MODNAME[m], kind: 'Module', d: DESC[m]})); return L; };
   const newRef = () => { const n = new Date(), z = x => String(x).padStart(2, '0'); return 'NR-' + n.getFullYear() + z(n.getMonth() + 1) + z(n.getDate()) + '-' + (Math.floor(Math.random() * 900) + 100); };
-  /* Envoi automatique du récapitulatif : NR.EVO le reçoit, et le client reçoit une copie par email (FormSubmit, champ "email"). */
+  /* Envoi automatique du récapitulatif : envoyer.php l'adresse à NR.EVO et en envoie une copie au client. */
   const sendRecap = (p, c, ref, bot) => {
     const L = packLines(p), name = c.name || '', co = c.co || '', mail = c.mail, tel = c.tel || '', msg = c.msg || '', who = name || mail;
     const sel = L.map(l => l.label).join(' + '), detail = L.map(l => `- ${l.kind} : ${l.label}`).join('\n');
     const txt = `Récapitulatif ${ref}\n\nClient : ${who}${co ? ' (' + co + ')' : ''}\nEmail : ${mail}${tel ? '\nTéléphone : ' + tel : ''}\n\nSélection :\n${detail}${msg ? '\n\nPrécisions : ' + msg : ''}\n\nÀ recontacter pour parler des prix et des modalités.`;
     const subject = 'Récapitulatif · ' + (co || who);
-    const auto = `Bonjour${name ? ' ' + name : ''},\n\nMerci pour votre demande ! Voici le récapitulatif de votre sélection (référence ${ref}) :\n\n${detail}\n\nIl n’y a pas de prix à ce stade : nous vous contactons très vite pour en parler avec vous, ainsi que des modalités.\n\nL’équipe NR.EVO\nnr.evo.contact@gmail.com`;
-    const useW3 = !!FORM.web3formsKey;
-    const url = useW3 ? 'https://api.web3forms.com/submit' : 'https://formsubmit.co/ajax/' + (FORM.formsubmitEmail || 'nr.evo.contact@gmail.com');
-    const data = useW3 ? {access_key: FORM.web3formsKey, subject, from_name: who, name: who, email: mail, message: txt, botcheck: !!bot}
-      : {_subject: subject, _template: 'table', _captcha: 'false', _replyto: mail, _honey: bot ? 'x' : '', _autoresponse: auto, Reference: ref, Nom: name || '—', Entreprise: co || '—', email: mail, Telephone: tel || '—', Selection: sel, Precisions: msg || '—', 'À faire': 'Recontacter le client : prix et modalités'};
-    const promise = postForm(url, data).then(() => true);
+    const promise = postForm({type: 'pack', ref, name, co, email: mail, tel, msg, selection: L.map(l => ({kind: l.kind, label: l.label})), bot: !!bot}).then(() => true);
     return {promise, txt, subject, sel};
   };
 
@@ -1203,13 +1197,8 @@ offres.forEach((o) =&gt; afficher(o));</pre>
         if (note) ready.insertAdjacentHTML('afterbegin', `<p class="ferr">${note}</p>`);
       };
       const btn = $('button[type="submit"]', form), old = btn.innerHTML; btn.disabled = true; btn.textContent = 'Envoi en cours…';
-      const bot = !!($('#fBot') && $('#fBot').checked), useW3 = !!FORM.web3formsKey;
-      const url = useW3 ? 'https://api.web3forms.com/submit' : 'https://formsubmit.co/ajax/' + (FORM.formsubmitEmail || 'nr.evo.contact@gmail.com');
-      const auto = `Bonjour ${name},\n\nMerci pour votre message, nous l’avons bien reçu. Nous vous répondons très vite.\n\nL’équipe NR.EVO\nnr.evo.contact@gmail.com`;
-      const data = useW3
-        ? {access_key: FORM.web3formsKey, subject, from_name: name, name, email: mail, message: txt, botcheck: bot}
-        : {_subject: subject, _template: 'table', _captcha: 'false', _replyto: mail, _honey: bot ? 'x' : '', _autoresponse: auto, Nom: name, email: mail, Telephone: tel || '—', Message: msg};
-      postForm(url, data)
+      const bot = !!($('#fBot') && $('#fBot').checked);
+      postForm({type: 'contact', name, email: mail, tel, msg, bot})
         .then(() => {
           body.hidden = true; ready.hidden = false;
           ready.innerHTML = `<div class="ready"><h3 class="h4">Message envoyé ✓</h3><p class="muted">Merci ${esc(name)}, nous revenons vers vous rapidement à <b style="color:var(--ink)">${esc(mail)}</b>.</p><pre>${esc(txt)}</pre><div class="row-btns"><button type="button" class="btn ghost" id="newMsg">Envoyer un autre message</button></div></div>`;

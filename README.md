@@ -19,14 +19,17 @@ Le site est entièrement statique (HTML, CSS, JavaScript) : aucun serveur ni bas
 | `a-propos.html`, `contact.html` | À propos et contact (formulaire simple) |
 | `demos/` | Les trois sites de démonstration (Volta, Braise, Garage Apex) |
 | `assets/` | Logo et captures d'écran : **ce dossier doit être en ligne**, sinon les images disparaissent |
-| `config.js` | Réglages des formulaires (adresse qui reçoit les messages) |
+| `envoyer.php` | Envoie les formulaires Contact et Pack par email (réglages en haut du fichier) |
+| `config.js` | Informations légales et adresse du script d'envoi |
 | `mentions-legales.html`, `confidentialite.html` | Pages légales obligatoires (liées dans le pied de page de chaque page) |
 | `assets/og.png` | Image affichée quand on partage le lien du site (WhatsApp, Instagram, LinkedIn...) |
 | `404.html` | Page affichée quand une adresse n'existe pas |
 | `_config.yml`, `.nojekyll` | Réglages GitHub Pages (voir « Problèmes fréquents ») |
 | `source/` | Fichiers source pour modifier le site (voir plus bas) |
 
-## Mettre le site en ligne avec GitHub Pages (gratuit)
+## Mettre le site en ligne avec GitHub Pages (gratuit, sans envoi d'emails)
+
+> GitHub Pages affiche très bien le site, mais **les formulaires n'y peuvent pas envoyer d'emails** (voir « Réception des messages »). Pour des formulaires qui fonctionnent, utilisez un hébergement PHP.
 
 1. Sur github.com, clique sur **New repository**, donne un nom (par exemple `nr-evo-site`), choisis **Public** (obligatoire pour Pages en gratuit), puis **Create repository**.
 2. Décompresse `nr-evo-site.zip` sur ton ordinateur.
@@ -38,16 +41,25 @@ Le site est entièrement statique (HTML, CSS, JavaScript) : aucun serveur ni bas
 
 Pour utiliser un nom de domaine (par exemple `nrevo.fr`) : achète-le, puis renseigne-le dans **Settings → Pages → Custom domain** et suis les instructions DNS de GitHub.
 
-## Activer la réception des messages (à faire une seule fois)
+## Réception des messages : `envoyer.php` (aucun service externe)
 
-Les formulaires du site (contact, et récapitulatif du pack) envoient les messages à `nr.evo.contact@gmail.com` via le service gratuit FormSubmit.
+Les formulaires **Contact** et **Composer mon pack** envoient leurs messages au fichier `envoyer.php`, qui fait partie du site. Il envoie :
 
-1. Une fois le site en ligne, envoie-toi un message de test depuis la page **Contact**.
-2. FormSubmit envoie alors un email d'activation à nr.evo.contact@gmail.com (regarde aussi les indésirables). Clique sur le lien dans cet email.
-3. Refais un test : le message doit arriver dans ta boîte. Teste aussi un récapitulatif depuis **Composer mon pack** avec une autre adresse pour vérifier que la copie arrive au client.
-4. Si l'envoi échoue, le site affiche la raison entre parenthèses, et le visiteur peut copier son message ou l'ouvrir dans sa messagerie : rien n'est perdu.
+- **Contact** : le message arrive dans votre boîte (`nr.evo.contact@gmail.com`), avec l'email du visiteur en « Répondre à ».
+- **Composer mon pack** : le récapitulatif arrive dans votre boîte **et** le client reçoit une copie sur son adresse.
 
-Option anti-spam : dans l'email d'activation, FormSubmit donne un identifiant aléatoire. Tu peux le coller dans `config.js` (champ `formsubmitEmail`) à la place de ton adresse.
+**Important : GitHub Pages ne peut pas envoyer d'emails** (il ne sert que des fichiers, il n'exécute aucun programme). Pour que les formulaires fonctionnent sans passer par un service externe, le site doit être sur un hébergement qui exécute PHP : OVH, o2switch, Hostinger, IONOS, etc. (environ 2 à 5 € par mois, souvent avec le nom de domaine). Envoyez-y **tout le contenu du dossier** (FTP ou gestionnaire de fichiers de l'hébergeur), `envoyer.php` compris.
+
+Réglages dans la partie « RÉGLAGES » en haut de `envoyer.php` :
+
+1. **Méthode simple (par défaut)** : rien à régler, le serveur envoie avec `noreply@votre-domaine`. Si les messages arrivent dans les indésirables, passez à la méthode SMTP.
+2. **Méthode SMTP (la plus fiable)** : renseignez `smtp_host`, `smtp_user`, `smtp_pass`.
+   - Avec votre Gmail : `smtp.gmail.com`, port 465, `ssl`, adresse `nr.evo.contact@gmail.com` et un « mot de passe d'application » Google (Compte Google > Sécurité > Validation en deux étapes > Mots de passe des applications).
+   - Avec une boîte de votre hébergeur (`contact@nrevo.fr`) : les paramètres SMTP sont dans l'espace client de l'hébergeur.
+
+Test : sur le site en ligne, envoyez un message depuis **Contact**, puis un récapitulatif depuis **Composer mon pack** avec une autre adresse : le message doit arriver chez vous et la copie chez le client. Si l'envoi échoue, le site affiche la raison, et le visiteur peut copier son message ou l'ouvrir dans sa messagerie : rien n'est perdu.
+
+Protections intégrées : champ piège anti-robots, limite de 5 envois par visiteur et par 10 minutes, refus des envois venant d'un autre site, nettoyage des champs.
 
 ## Problèmes fréquents sur GitHub Pages
 
@@ -59,7 +71,7 @@ Option anti-spam : dans l'email d'activation, FormSubmit donne un identifiant al
 | La version en ligne ne change pas après une mise à jour | Attends 2 minutes, puis recharge avec Ctrl + F5 (Cmd + Maj + R sur Mac). |
 | Le dépôt est privé et Pages ne démarre pas | Pages gratuit demande un dépôt public. |
 | Fichiers cachés (`.nojekyll`, `.gitignore`) non envoyés | Sans gravité : le site marche sans. `_config.yml` règle le cas. |
-| Les messages n'arrivent pas | Voir « Activer la réception des messages ». Regarde aussi les indésirables. |
+| Les messages n'arrivent pas | Le site doit être sur un hébergement PHP (pas GitHub Pages). Voir « Réception des messages ». Regarde aussi les indésirables. |
 
 ## Aperçu de partage, plan du site (optionnel)
 
