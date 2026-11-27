@@ -1,8 +1,11 @@
 // Configuration du site NR.EVO.
-// Les formulaires (contact, récapitulatif du pack) sont envoyés par le fichier envoyer.php, hébergé avec le site :
-// aucun service externe. L'adresse qui reçoit les messages et le mode d'envoi se règlent en haut de envoyer.php.
+// Envoi des formulaires (contact, récapitulatif du pack), sans aucun service externe :
+//  - mailEndpoint vide (réglage actuel, adapté à GitHub Pages) : le site ouvre la messagerie du visiteur avec le message
+//    prêt, adressé à teamEmail (et au client en copie pour le récapitulatif). Le visiteur appuie sur « Envoyer ».
+//  - mailEndpoint: "envoyer.php" : envoi automatique par le serveur, possible seulement sur un hébergement PHP (voir README).
 window.NR_CONFIG = {
-  mailEndpoint: "envoyer.php",
+  teamEmail: "nr.evo.contact@gmail.com",
+  mailEndpoint: "",
 
   // Informations légales affichées sur « Mentions légales » et « Politique de confidentialité ».
   // Remplis les champs entre guillemets, enregistre, puis renvoie ce fichier sur l'hébergement.

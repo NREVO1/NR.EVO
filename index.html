@@ -834,6 +834,13 @@ lancer(projet);</pre><div class="ring"></div>
     }
   };
   const FORM = window.NR_CONFIG || {};
+  // Deux modes d'envoi, sans aucun service externe :
+  //  - « messagerie » (par défaut, adapté à GitHub Pages) : le site ouvre la messagerie du visiteur avec le message prêt,
+  //    adressé à NR.EVO (et au client en copie pour le récapitulatif). Le visiteur n'a qu'à appuyer sur « Envoyer ».
+  //  - « serveur » : si mailEndpoint est renseigné (config.js), envoyer.php envoie les emails (hébergement PHP).
+  const MAILTO = !FORM.mailEndpoint;
+  const TEAM = FORM.teamEmail || 'nr.evo.contact@gmail.com';
+  const mailtoHref = (subject, body, cc) => 'mailto:' + TEAM + '?' + (cc ? 'cc=' + encodeURIComponent(cc) + '&' : '') + 'subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body.slice(0, 1800));
   // Envoi par le script du site lui-même (envoyer.php) : aucun service externe.
   // Délai maximal de 20 s pour qu'un formulaire ne reste jamais bloqué.
   const postForm = data => {
@@ -888,8 +895,11 @@ lancer(projet);</pre><div class="ring"></div>
     const sel = L.map(l => l.label).join(' + '), detail = L.map(l => `- ${l.kind} : ${l.label}`).join('\n');
     const txt = `Récapitulatif ${ref}\n\nClient : ${who}${co ? ' (' + co + ')' : ''}\nEmail : ${mail}${tel ? '\nTéléphone : ' + tel : ''}\n\nSélection :\n${detail}${msg ? '\n\nPrécisions : ' + msg : ''}\n\nÀ recontacter pour parler des prix et des modalités.`;
     const subject = 'Récapitulatif · ' + (co || who);
+    const mtxt = `Bonjour NR.EVO,\n\nVoici mon récapitulatif (référence ${ref}).\n\nNom : ${who}${co ? ' (' + co + ')' : ''}\nEmail : ${mail}${tel ? '\nTéléphone : ' + tel : ''}\n\nMa sélection :\n${detail}${msg ? '\n\nPrécisions : ' + msg : ''}\n\nMerci de me recontacter pour parler des prix et des modalités.`;
+    const mailto = mailtoHref(subject, mtxt, mail);
+    if (MAILTO) return {promise: Promise.reject(Object.assign(new Error('mailto'), {mailto})), txt: mtxt, subject, sel, mailto};
     const promise = postForm({type: 'pack', ref, name, co, email: mail, tel, msg, selection: L.map(l => ({kind: l.kind, label: l.label})), bot: !!bot}).then(() => true);
-    return {promise, txt, subject, sel};
+    return {promise, txt: mtxt, subject, sel, mailto};
   };
 
   /* ---------- page enter ---------- */
@@ -1171,7 +1181,15 @@ lancer(projet);</pre><div class="ring"></div>
       const btn = $('#tkSend'), old = btn.innerHTML; btn.disabled = true; btn.textContent = 'Envoi en cours…';
       const ref = newRef(), s = sendRecap(p, {name, mail, tel, co, msg}, ref, $('#tkBot') && $('#tkBot').checked);
       s.promise.then(() => { store.set('nr_sent', {ref}); $('#tkForm').hidden = true; const d = $('#tkDone'); d.hidden = false; d.innerHTML = '<b>Récapitulatif envoyé ✓</b><p class="muted"></p><div class="row-btns"><a class="btn sm" href="recapitulatif.html?sent=' + encodeURIComponent(ref) + '" data-t="Récapitulatif">Imprimer / PDF</a></div>'; $('p', d).textContent = 'Merci ' + name + ' ! Une copie arrive sur ' + mail + ' (regardez aussi les indésirables). On vous contacte très vite pour parler des prix et des modalités.'; })
-        .catch(er => { err.textContent = 'L’envoi automatique a échoué (' + ((er && er.message) || 'erreur réseau') + '). Réessayez, ou '; const a = document.createElement('a'); a.className = 'ulink'; a.href = 'contact.html'; a.dataset.t = 'Contact'; a.textContent = 'écrivez-nous depuis la page contact'; err.appendChild(a); })
+        .catch(er => {
+          if (er && er.mailto) {
+            $('#tkForm').hidden = true; const d = $('#tkDone'); d.hidden = false;
+            d.innerHTML = '<b>Dernière étape : envoyez l’email</b><p class="muted"></p><div class="row-btns"><a class="btn sm" id="tkMailto">Ouvrir ma messagerie</a><button type="button" class="ulink" id="tkCopy" style="background:none;border:0;cursor:pointer">Copier le récapitulatif</button></div>';
+            $('p', d).textContent = 'Votre messagerie s’ouvre avec le récapitulatif prêt, adressé à NR.EVO, avec ' + mail + ' en copie. Appuyez sur « Envoyer » : rien ne part avant. Rien ne s’est ouvert ? Utilisez les boutons ci-dessous.';
+            $('#tkMailto').href = er.mailto; $('#tkCopy').addEventListener('click', () => copy(s.txt, 'Récapitulatif copié'));
+            location.href = er.mailto; return;
+          }
+          err.textContent = 'L’envoi automatique a échoué (' + ((er && er.message) || 'erreur réseau') + '). Réessayez, ou '; const a = document.createElement('a'); a.className = 'ulink'; a.href = 'contact.html'; a.dataset.t = 'Contact'; a.textContent = 'écrivez-nous depuis la page contact'; err.appendChild(a); })
         .finally(() => { btn.disabled = false; btn.innerHTML = old; });
     });
     $('#tkReset').addEventListener('click', () => { p.base = 'prm'; p.mods.clear(); render(); toast('Pack réinitialisé'); });
@@ -1201,14 +1219,15 @@ lancer(projet);</pre><div class="ring"></div>
       store.set('nr_contact', Object.assign({}, store.get('nr_contact', {}), {name, mail, tel}));
       const txt = `Bonjour NR.EVO,\n\n${msg}\n\n${name}\nEmail : ${mail}${tel ? '\nTéléphone : ' + tel : ''}`;
       const subject = 'Message · ' + name;
-      const showReady = note => {
+      const showReady = (note, mt) => {
         body.hidden = true; ready.hidden = false;
-        ready.innerHTML = `<div class="ready"><h3 class="h4">Votre message est prêt</h3><p class="muted">Envoyez-le à <b style="color:var(--ink);user-select:all">nr.evo.contact@gmail.com</b> : copiez-le, ou ouvrez-le dans votre messagerie.</p><pre>${esc(txt)}</pre><div class="row-btns"><button type="button" class="btn" id="cpMsg">Copier le message</button><a class="btn ghost" href="mailto:nr.evo.contact@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(txt)}">Ouvrir ma messagerie</a><button type="button" class="ulink" id="editMsg" style="background:none;border:0;cursor:pointer">Modifier</button></div></div>`;
+        ready.innerHTML = `<div class="ready">${mt ? '<h3 class="h4">Dernière étape : envoyez l’email</h3><p class="muted">Votre messagerie s’ouvre avec le message prêt, adressé à <b style="color:var(--ink);user-select:all">' + TEAM + '</b>. Appuyez sur « Envoyer » : rien ne part avant. Rien ne s’est ouvert ? Utilisez les boutons ci-dessous.</p>' : '<h3 class="h4">Votre message est prêt</h3><p class="muted">Envoyez-le à <b style="color:var(--ink);user-select:all">' + TEAM + '</b> : copiez-le, ou ouvrez-le dans votre messagerie.</p>'}<pre>${esc(txt)}</pre><div class="row-btns"><button type="button" class="btn" id="cpMsg">Copier le message</button><a class="btn ghost" href="mailto:nr.evo.contact@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(txt)}">Ouvrir ma messagerie</a><button type="button" class="ulink" id="editMsg" style="background:none;border:0;cursor:pointer">Modifier</button></div></div>`;
         $('#cpMsg').addEventListener('click', () => copy(txt, 'Message copié'));
         $('#editMsg').addEventListener('click', () => { ready.hidden = true; body.hidden = false; $('#fMsg').focus(); });
         if (note) ready.insertAdjacentHTML('afterbegin', `<p class="ferr">${note}</p>`);
       };
       const btn = $('button[type="submit"]', form), old = btn.innerHTML; btn.disabled = true; btn.textContent = 'Envoi en cours…';
+      if (MAILTO) { showReady('', true); btn.disabled = false; btn.innerHTML = old; location.href = mailtoHref(subject, txt); return; }
       const bot = !!($('#fBot') && $('#fBot').checked);
       postForm({type: 'contact', name, email: mail, tel, msg, bot})
         .then(() => {
@@ -1245,7 +1264,7 @@ lancer(projet);</pre><div class="ring"></div>
       const old = send.innerHTML; send.disabled = true; send.textContent = 'Envoi en cours…';
       const show = html => { rc.hidden = true; done.hidden = false; done.innerHTML = html; scrollTo(0, 0); };
       s.promise.then(() => { store.set('nr_sent', {ref}); lock(`<div class="ready"><h3 class="h3">Récapitulatif envoyé ✓</h3><p class="lead">Merci ${esc(name)}. Une copie vient d’être envoyée à <b>${esc(mail)}</b> (pensez à regarder les courriers indésirables). Nous vous contactons très vite pour parler des prix et des modalités.</p><div class="row-btns"><button type="button" class="btn" data-print>Imprimer / PDF</button><a class="btn ghost" href="index.html">Retour à l’accueil</a></div></div>`); })
-        .catch(er => { show(`<div class="ready"><p class="ferr">L’envoi automatique a échoué${er && er.message ? ' (' + esc(er.message) + ')' : ''}. Votre récapitulatif est prêt : envoyez-le par email.</p><pre>${esc(s.txt)}</pre><div class="row-btns"><button type="button" class="btn" id="rcCopy">Copier le récapitulatif</button><a class="btn ghost" href="mailto:nr.evo.contact@gmail.com?subject=${encodeURIComponent(s.subject)}&body=${encodeURIComponent(s.txt)}">Ouvrir ma messagerie</a></div></div>`); $('#rcCopy').addEventListener('click', () => copy(s.txt, 'Récapitulatif copié')); })
+        .catch(er => { show(`<div class="ready">${er && er.mailto ? '<h3 class="h3">Dernière étape : envoyez l’email</h3><p class="lead">Votre messagerie s’ouvre avec le récapitulatif prêt, adressé à NR.EVO, avec ' + esc(mail) + ' en copie. Appuyez sur « Envoyer » : rien ne part avant. Rien ne s’est ouvert ? Utilisez les boutons ci-dessous.</p>' : '<p class="ferr">L’envoi automatique a échoué' + (er && er.message ? ' (' + esc(er.message) + ')' : '') + '. Votre récapitulatif est prêt : envoyez-le par email.</p>'}<pre>${esc(s.txt)}</pre><div class="row-btns"><button type="button" class="btn" id="rcCopy">Copier le récapitulatif</button><a class="btn ghost" href="${esc(s.mailto)}">Ouvrir ma messagerie</a></div></div>`); $('#rcCopy').addEventListener('click', () => copy(s.txt, 'Récapitulatif copié')); if (er && er.mailto) location.href = er.mailto; })
         .finally(() => { send.disabled = false; send.innerHTML = old; });
     });
   }
